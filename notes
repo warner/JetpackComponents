@@ -1,0 +1,89 @@
+
+with dash:
+
+There is an imaginary program which stitches all of these components
+together. It written in python, it would look like this:
+
+def make_extension(chrome, host="twitter.com", password_slotname="twitter"):
+  x = XHR(chrome, restrict_to=host)
+  pw = PasswordSlotAccess(chrome, password_slotname)
+  t1 = TwitterAPI(x, pw)
+  t2 = ReadOnlyTwitterAPI(t1)
+  s = StatusBarIconMaker(chrome)
+  d = Driver(t2, s)
+  d.run()
+
+That makes it pretty clear how the pieces need to be wired up. But this is
+too flexible, and must be given full chrome authority, and it isn't clear
+where it ought to live. If it lives in the top-level addon bundle, along with
+the Driver code, then it looks a lot like giving chrome access to the addon
+as a whole (which, while technically accurate, isn't what we're going for:
+the addon ought to only be getting ReadOnlyTwitterAPI and
+StatusBarIconMaker).
+
+So we could instead express this imaginary program in the various
+manifest.json files that serve as headers for the different components. And
+we handle the parameterization by passing in a PowerBox request marker. When
+the loader assembles all the components together, it makes a list of all the
+markers and uses that to construct the install-time configuration dialog.
+
+RestrictedXHR:
+ provides: XHR
+ depends_on: chrome
+ args: restrict_to=PowerBoxRequest(DOMAIN, "Allow XHR access to which site?")
+
+PasswordSlotAccess:
+ provides: PasswordSlotAccess
+ depends_on: chrome
+ args: slotname=PowerBoxRequest(PASSWORD, "Which password to use?")
+
+TwitterAPI:
+ provides: TwitterAPI
+ depends_on: RestrictedXHR, PasswordSlotAccess
+
+ReadOnlyTwitterAPI:
+ provides: ReadOnlyTwitterAPI
+ depends_on: TwitterAPI
+
+StatusBarIconMaker:
+ provides: StatusBarIconMaker
+ depends_on: chrome
+
+Driver:
+ depends_on: ReadOnlyTwitterAPI, StatusBarIconMaker
+
+The loader would spot the two PowerBoxRequest markers and ask the user for a
+DOMAIN and PASSWORD(name) when installing.
+
+Note that none of the higher components are aware of the lower components'
+authority requirements: they don't even see the PowerBoxRequest markers. This
+allows the Driver to clearly depend only upon the appropriate APIs (and any
+object which actually provide these APIs are assumed to be constructed with
+sufficient authorities to do their job).
+
+OTOH, we'd really like the install-time dialog to at least explain what these
+DOMAIN/PASSWORD are used for, and probably suggest a default. Maybe something
+vaguely like:
+
+TwitterAPI:
+ provides: TwitterAPI
+ depends_on: RestrictedXHR(desc="Which twitter-like site shall I access?",
+                           default="twitter.com"), PasswordSlotAccess
+
+RestrictedXHR(desc,default):
+ desc = "Allow XHR access to which site?" + desc
+ provides: XHR
+ depends_on: chrome
+ args: restrict_to=PowerBoxRequest(DOMAIN, desc, default)
+
+dash recommends: A Ban On Imports, from the Newspeak (proglang) site
+ conflating interface with implementation
+ like when you do:
+  try: import json
+  except ImportError: import simplejson as json
+ and really wanted to do "import ISimpleJSON as json" and let the loader
+ figure out which implementation is available
+
+ also Scheme48 modules
+
+
