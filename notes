@@ -87,3 +87,42 @@ dash recommends: A Ban On Imports, from the Newspeak (proglang) site
  also Scheme48 modules
 
 
+With Dean Tribble:
+
+The "assembly program" should be a thing in its own right, not just a
+byproduct of the dependency graph. This is more obvious when you consider
+duplicate components: an add-on which has a piece that wants XHR to twitter
+and a different piece that wants XHR to blogspot will need two separate XHR
+instances, configured with different user-sourced restrictions. It's also
+more clear when you consider that it's the LimitedXHR which needs the
+restriction, but it's some component above it which knows what that
+particular LXHR is going to be used for, and can therefore provide a clear
+prompt for the user.
+
+The assembly program shouldn't be written in javascript, but it could compile
+down to that. It should probably be expressed in some sort of XML/JSON
+expression tree, as a graph of instantiated components and
+questions/powerboxes that involve the user. The phrasing of the user config
+questions should go here.
+
+How is this assembly language ("blueprint"? "bill-of-materials"?) safer than
+writing a JS program and giving it full chrome access? First answer is
+typechecking: by only wiring up objects with compatible APIs, we can't
+accidentally give chrome access to anything but the low-level components that
+declared a need for it. Second is limited domain: no loops, no conditionals.
+
+This language should probably be represented (at least visualized, if not
+constructed from) a picture: component nodes in a graph.
+
+Some of the nodes are "ask the user to pick a thing X, with prompt Y, default
+Z, and constraints ABC". The assembly-reviewer is responsible for making sure
+the questions are accurate and useful, and that the defaults match the
+expectations of someone reading the add-on description.
+
+The presence of an assembly language creates a distinction between the add-on
+as a whole, and the top-level component. This has implications for composing
+add-ons. A useful example might be an add-on which manages the user's blog
+(an object which has an API to post or edit new items), and a bunch of other
+add-ons which can usefully talk to this blog object to do things. The user
+needs to first define a "blog", then other add-ons can be declared to need a
+connection to this object.
