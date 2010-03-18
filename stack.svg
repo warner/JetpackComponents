@@ -13,7 +13,7 @@
    height="744.09448"
    id="svg2"
    version="1.1"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.47pre3 r22311"
    sodipodi:docname="stack.svg"
    inkscape:export-filename="/Users/warner/stuff/mozilla/jetpack/JetpackComponents/stack.png"
    inkscape:export-xdpi="59.040001"
@@ -49,8 +49,8 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="0.81844445"
-     inkscape:cx="526.18109"
-     inkscape:cy="409.31306"
+     inkscape:cx="534.7339"
+     inkscape:cy="364.71626"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -67,7 +67,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -89,7 +89,7 @@
        sodipodi:cy="224.63213"
        sodipodi:rx="83.035225"
        sodipodi:ry="70.798454"
-       d="m 451.01237,224.63213 a 83.035225,70.798454 0 1 1 -166.07045,0 83.035225,70.798454 0 1 1 166.07045,0 z"
+       d="m 451.01237,224.63213 c 0,39.1009 -37.17614,70.79845 -83.03523,70.79845 -45.85909,0 -83.03522,-31.69755 -83.03522,-70.79845 0,-39.10091 37.17613,-70.79846 83.03522,-70.79846 45.85909,0 83.03523,31.69755 83.03523,70.79846 z"
        transform="translate(572.84005,184.99418)" />
     <g
        id="g3703"
@@ -363,11 +363,6 @@
            x="389.98441"
            y="416.96179">TwitterStatusMainLoop</tspan></text>
     </g>
-    <path
-       id="path4392"
-       d="m 483.84468,420.67606 c -3.66549,134.4013 48.8732,118.51751 32.98941,260.24979"
-       style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
-       sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
        d="m 379.98913,419.45423 -56.20418,54.98235"

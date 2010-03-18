@@ -2,7 +2,7 @@
 with dash:
 
 There is an imaginary program which stitches all of these components
-together. It written in python, it would look like this:
+together. If written in python, it would look like this:
 
 def make_extension(chrome, host="twitter.com", password_slotname="twitter"):
   x = XHR(chrome, restrict_to=host)

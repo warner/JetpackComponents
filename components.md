@@ -372,8 +372,10 @@ object that can only speak to twitter.com, or a PasswordManager object that
 only grants access to the twitter password. Some of these parameter values
 need to come from the user: the act of designating the value is an act of
 authorization, and forms part of the user's decision-making process.
+(Incidentally, this is where the capabilities community starts referring to
+things like a "Powerbox", which I don't entirely understand yet).
 
-The whole process of wiring these objects together is best expressed as a
+The whole process of wiring these objects together could be expressed in a
 program of some sort. The top-level add-on could consist of two separate
 pieces of code. The first would be the normal top-level component,
 constrained to be endowed with whatever API-providing object its manifest
@@ -394,15 +396,139 @@ might look vaguely like:
       d = Driver(t2, s)
       d.run()
 
-But having that setup code be delivered in the top-level add-on package feels
-wrong. I think that instead it should somehow be expressed by the collection
-of component headers, or by a program that runs on the user's behalf (not
-coming from the add-on) and interprets those headers (and asks questions of
-the user). (Incidentally, this is where the capabilities community starts
-referring to things like a "Powerbox", which I don't entirely understand
-yet).
+Expressing the setup code as a program makes it pretty clear how the pieces
+need to be wired up. But this is too flexible, and must be given full chrome
+authority, and it isn't clear where it ought to live. If it lives in the
+top-level addon bundle, along with the Driver code, then it looks a lot like
+giving chrome access to the addon as a whole (which, while technically
+accurate, isn't what we're going for: the addon ought to only be getting
+ReadOnlyTwitterAPI and StatusBarIconMaker).
 
-This is definitely the point where I get stuck: I don't yet know how to make
-the jump from the user's installation process (and the decisions they make)
-to having a graph of live objects that implement the desired functionality.
-The end state seems clear to me, but not the path to get there.
+So, instead of expressing this imaginary setup program in javascript, we
+could distribute it among the various package.json files that serve as
+headers for the different components. And we handle the parameterization by
+passing in a "PowerBox" request marker. When the loader assembles all the
+components together, it makes a list of all the markers and uses that to
+construct the install-time configuration dialog.
+
+    RestrictedXHR:
+     provides: XHR
+     depends_on: chrome
+     args: restrict_to=PowerBoxRequest(DOMAIN, "Allow XHR access to which site?")
+    
+    PasswordSlotAccess:
+     provides: PasswordSlotAccess
+     depends_on: chrome
+     args: slotname=PowerBoxRequest(PASSWORD, "Which password to use?")
+    
+    TwitterAPI:
+     provides: TwitterAPI
+     depends_on: RestrictedXHR, PasswordSlotAccess
+    
+    ReadOnlyTwitterAPI:
+     provides: ReadOnlyTwitterAPI
+     depends_on: TwitterAPI
+    
+    StatusBarIconMaker:
+     provides: StatusBarIconMaker
+     depends_on: chrome
+    
+    Driver:
+     depends_on: ReadOnlyTwitterAPI, StatusBarIconMaker
+
+The loader would spot the two PowerBoxRequest markers and ask the user for a
+DOMAIN and PASSWORD(name) when installing, using the 
+
+Note that none of the higher components are aware of the lower components'
+authority requirements: they don't even see the PowerBoxRequest markers. This
+allows the top-level Driver to clearly depend only upon the appropriate APIs
+(and any object which actually provide these APIs are assumed to be
+constructed with sufficient authorities to do their job).
+
+OTOH, we'd really like the install-time dialog to at least explain what these
+DOMAIN/PASSWORD are used for, and probably suggest a default. The situation
+is complicated by the fact that the lower-level components doing the
+restricting are not generally aware of what their restrictions are being used
+for. The RestrictedXHR object doesn't know that it's being used by a
+TwitterAPI, so it can't offer a meaningful question to the user.. only the
+TwitterAPI object (or something higher up) can provide that. So maybe
+something vaguely like:
+
+    TwitterAPI:
+     provides: TwitterAPI
+     depends_on: RestrictedXHR(desc="Which twitter-like site shall I access?",
+                               default="twitter.com"), PasswordSlotAccess
+    
+    RestrictedXHR(desc,default):
+     desc = "Allow XHR access to which site?" + desc
+     provides: XHR
+     depends_on: chrome
+     args: restrict_to=PowerBoxRequest(DOMAIN, desc, default)
+
+### Bundling 2
+
+Another approach is that the "setup code" / "assembly program" should be a
+thing in it's own right, not just a byproduct of the dependency graph,
+expressed in a single file that gets reviewed just like the other components.
+The utility of this becomes more obvious when you consider duplicate
+components: an add-on which has a piece that wants XHR to twitter.com and a
+different piece that wants XHR to blogspot.com will need two separate XHR
+instances, configured with different user-sourced restrictions. It's also
+more clear when you consider that it's the LimitedXHR which needs the
+restriction, but it's some component above it which knows what that
+particular LXHR is going to be used for, and can therefore provide a clear
+prompt for the user.
+
+The assembly program shouldn't be written in javascript, but it could compile
+down to that. It should probably be expressed in some sort of XML/JSON
+expression tree, as a graph of instantiated components and
+questions/powerboxes that involve the user. The phrasing of the user config
+questions should go here.
+
+This "program" should probably be represented (at least visualized, if not
+actually constructed from) a picture: component nodes in a graph. Some of the
+nodes are "ask the user to pick a thing X, with prompt Y, default Z, and
+constraints ABC". The assembly-reviewer is responsible for making sure the
+questions are accurate and useful, and that the defaults match the
+expectations of someone reading the add-on description. This "program" should
+live in a single file, and the add-on ID that a user refences should include
+a strong hash of this file. The reviewer is then making a claim that "the
+following named modules, when assembled together according to this
+assembly-program, and parameterized with the following user-provided values
+(which were asked using the following questions and defaults), does correctly
+and safely provide the claimed functionality.
+
+How is this assembly language ("blueprint"? "bill-of-materials"?) safer than
+writing a JS program and giving it full chrome access? First answer is
+typechecking: by only wiring up objects with compatible APIs, we can't
+accidentally give chrome access to anything but the low-level components that
+declared a need for it. Second is limited domain: no loops, no conditionals.
+This program will mostly be written by a computer: some tool will look at the
+components available and the APIs they implement, and will refuse to help
+build an assembly-program that connects them in non-typesafe ways (e.g.
+granting full chrome access to the TwitterAPI constructor, or granting a
+StatusBarIconMaker to the TwitterAPI constructor). Ideally, this tool will
+start with the top-level driver component, figure out the set of components
+which are needed to (transitively) satisfy its API requirements, assemble
+these into an object graph, locate the parameters (i.e. free variables) that
+need values, and present a list of parameters to the developer with
+instructions to fill in the question text and defaults. Each question should
+be linked to the place in the object graph where the value will be used. The
+output of this process is a file that defines the add-on as a whole.
+
+Note that the presence of an assembly "language" creates a distinction
+between the add-on as a whole, and the top-level component. This has
+implications for composing add-ons (one add-on creating a facility that is
+then exposed to other add-ons). A useful example might be an add-on which
+manages the user's blog (an object which has an API to post or edit new
+items), and a bunch of other add-ons which can usefully talk to this local
+blog object to do things. The user needs to first define a "blog", then other
+add-ons can be declared to need a connection to this object. Regular
+components would request access to a Blog object by just indicating a
+dependency on a specific blog-manipulating API. I'm not sure how these
+assemblies could express their ability/need to be connected to one.
+
+So, somehow, we have to make the jump from the user's installation process
+(and the decisions they make) to having a graph of live objects that
+implement the desired functionality. The end state seems clear to me, but the
+path to get there is still pretty fuzzy.
