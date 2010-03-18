@@ -43,6 +43,8 @@ This add-on would consist of a stack of components:
   statusbar, updates its content, and delivers click events upwards
 - CreateNewTab: provides an API that accepts a URL and opens a new tab
 
+![component stack](stack.png "Component Stack")
+
 ## Definitions
 
 **Principle Of Least Authority (POLA)**: each component of a software system
@@ -99,7 +101,7 @@ endowments that provide compatible APIs. There may be multiple components
 that fulfill a given API: the component stack will reference a specific
 component for each endowment slot.
 
-## Proposal: Runtime Component Stack:
+## Proposal: Runtime Component Stack
 
 The idealized POLA-riffic Twitter statusbar tool would consist of a stack of
 isolated components as described in the Example section above, and some
@@ -149,9 +151,10 @@ cookies, or access any other site than the preconfigured one.
 
 A fault in the XHR object, since it has access to the chrome context, would
 be significant. Chrome components must be kept simple (for easy review), and
-reviewed carefully.
+reviewed carefully. There are likely to be far fewer Chrome Components than
+non-chrome components.
 
-## Proposal: Component Catalog:
+## Proposal: Component Catalog
 
 All the components described in the twitter example could be
 community-written. Ideally, the author of a new twitter status add-on should
@@ -236,15 +239,16 @@ they're risking the consequences that will occur if that add-on abuses the
 authority (either accidentally or through malice). They weigh this risk
 against the benefits that the add-on might provide if it acts according to
 its description. The Twitter status add-on might be a convenient tool to show
-you when you have messages to read, or it might delete your twitter account
-after sending rude messages to everyone you know.
+you when you have messages to read, or it might post all your stored
+passwords to slashdot and then delete every file on your hard drive.
 
 If the risk can be constrained, this tradeoff can be more comfortable.
 Compare the previous tradeoff against this one: "The Twitter status add-on
 might be a convenient tool to show you when you have messages to read, or it
-might fail to tell you when you have messages to read". When the add-on is
-implemented in a POLA style, out of components that do their stated job
-correctly, the risks are greatly reduced.
+might delete your twitter account after sending rude messages to everyone you
+know". Better yet: "or it might fail to tell you when you have messages to
+read". When the add-on is implemented in a POLA style, out of components that
+do their stated job correctly, the risks are greatly reduced.
 
 In practice, we expect that most users will delegate this decision to AMO
 reviewers. This would be implemented by providing a simpler/less-scary
@@ -369,16 +373,26 @@ only grants access to the twitter password. Some of these parameter values
 need to come from the user: the act of designating the value is an act of
 authorization, and forms part of the user's decision-making process.
 
-And the whole process of wiring these objects together is best expressed in
-code of some sort. One possibility is that the top-level add-on could consist
-of two separate pieces of code. The first would be the normal top-level
-component, constrained to be endowed with whatever API-providing object its
-manifest asked for. The second would be the one that constructs the object
-graph: it would run with complete authority, use that to create first the
-low-level chrome component objects, then the layer above that, etc, then
-finally the top-most add-on object. This "setup" code would form the bridge
-between the user (as the source of all authority) and the bits of confined
-code that will eventually make up the add-on stack.
+The whole process of wiring these objects together is best expressed as a
+program of some sort. The top-level add-on could consist of two separate
+pieces of code. The first would be the normal top-level component,
+constrained to be endowed with whatever API-providing object its manifest
+asked for. The second would be the one that constructs the object graph: it
+would run with complete authority, use that to create first the low-level
+chrome component objects, then the layer above that, etc, then finally the
+top-most add-on object. This "setup" code would form the bridge between the
+user (as the source of all authority) and the bits of confined code that will
+eventually make up the add-on stack. For the twitter example, that setup code
+might look vaguely like:
+
+    def make_extension(chrome, host="twitter.com", password_slotname="twitter"):
+      x = XHR(chrome, restrict_to=host)
+      pw = PasswordSlotAccess(chrome, password_slotname)
+      t1 = TwitterAPI(x, pw)
+      t2 = ReadOnlyTwitterAPI(t1)
+      s = StatusBarIconMaker(chrome)
+      d = Driver(t2, s)
+      d.run()
 
 But having that setup code be delivered in the top-level add-on package feels
 wrong. I think that instead it should somehow be expressed by the collection
