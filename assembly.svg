@@ -14,8 +14,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.47 r22583"
-   sodipodi:docname="stack.svg"
-   inkscape:export-filename="/Users/warner/stuff/mozilla/jetpack/JetpackComponents/stack.png"
+   sodipodi:docname="assembly.svg"
+   inkscape:export-filename="/Users/warner/stuff/mozilla/jetpack/JetpackComponents/assembly.png"
    inkscape:export-xdpi="59.869999"
    inkscape:export-ydpi="59.869999">
   <defs
@@ -49,15 +49,15 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="0.81844445"
-     inkscape:cx="534.7339"
+     inkscape:cx="615.85588"
      inkscape:cy="395.26201"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1089"
      inkscape:window-height="748"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-x="80"
+     inkscape:window-y="6"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
@@ -113,28 +113,24 @@
            id="tspan3608"
            sodipodi:role="line">XHR</tspan></text>
     </g>
-    <g
-       id="g3698"
-       transform="translate(-130.73581,3.6654901)">
-      <rect
-         y="762.30115"
-         x="155.48264"
-         height="70.619926"
-         width="333.59348"
-         id="rect3594"
-         style="fill:#b5b5ff;fill-opacity:1;stroke:#000000;stroke-opacity:1" />
-      <text
-         sodipodi:linespacing="125%"
-         id="text3610"
-         y="805.14624"
-         x="178.06844"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
-         xml:space="preserve"><tspan
-           y="805.14624"
-           x="178.06844"
-           id="tspan3612"
-           sodipodi:role="line">XHRLimiter(twitter.com)</tspan></text>
-    </g>
+    <rect
+       style="fill:#b5b5ff;fill-opacity:1;stroke:#000000;stroke-opacity:1"
+       id="rect3594"
+       width="174.75557"
+       height="63.288956"
+       x="24.746826"
+       y="765.96661" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+       x="47.332626"
+       y="808.81171"
+       id="text3610"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3612"
+         x="47.332626"
+         y="808.81171">XHRLimiter</tspan></text>
     <g
        id="g3665"
        transform="translate(-17.10562,0)">
@@ -272,26 +268,26 @@
       </g>
     </g>
     <g
-       id="g3711"
-       transform="translate(-4.8873201,6.1091501)">
+       id="g3704"
+       transform="translate(119.73934,-43.985881)">
       <rect
          style="fill:#b5b5ff;fill-opacity:1;stroke:#000000;stroke-opacity:1"
          id="rect3646"
-         width="332.37167"
-         height="69.398102"
-         x="358.22766"
-         y="677.84918" />
+         width="112.4423"
+         height="62.067154"
+         x="353.34033"
+         y="683.95831" />
       <text
          sodipodi:linespacing="125%"
          id="text3648"
-         y="720.08337"
-         x="373.44086"
+         y="723.72821"
+         x="365.75095"
          style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
          xml:space="preserve"><tspan
-           y="720.08337"
-           x="373.44086"
+           y="723.72821"
+           x="365.75095"
            id="tspan3650"
-           sodipodi:role="line">OnePW(&quot;twitteraccount&quot;)</tspan></text>
+           sodipodi:role="line">OnePW</tspan></text>
     </g>
     <text
        xml:space="preserve"
@@ -328,17 +324,17 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
-       d="m 215.04208,836.09826 24.4366,61.0915"
+       d="m 160.05973,831.21094 79.41895,65.97882"
        id="path4180"
        sodipodi:nodetypes="cc" />
     <path
        id="path4182"
-       d="m 312.78848,677.26036 40.32039,36.6549"
+       d="m 312.78848,677.26036 157.61607,-3.66549"
        style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
-       d="M 522.94324,753.01382 507.05945,898.41159"
+       d="m 562.0418,704.14062 1.22183,190.60548"
        id="path4184"
        sodipodi:nodetypes="cc" />
     <g
@@ -378,5 +374,82 @@
        style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
        d="m 631.68612,419.45423 c 17.10562,144.17594 305.4575,351.88704 322.56312,487.51017"
        id="path4398" />
+    <g
+       id="g3711"
+       transform="translate(-199.15829,222.37306)">
+      <rect
+         transform="translate(0,308.2677)"
+         y="221.15123"
+         x="443.52429"
+         height="78.197098"
+         width="306.67932"
+         id="rect2904"
+         style="fill:#bdffff;fill-opacity:1;stroke:none" />
+      <text
+         sodipodi:linespacing="100%"
+         id="text3684"
+         y="554.03503"
+         x="455.09149"
+         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+         xml:space="preserve"><tspan
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+           y="554.03503"
+           x="455.09149"
+           id="tspan3686"
+           sodipodi:role="line">Q: Which Twitter-like server?</tspan><tspan
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+           id="tspan3688"
+           y="574.03503"
+           x="455.09149"
+           sodipodi:role="line">default: &quot;https://twitter.com/&quot;</tspan><tspan
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+           id="tspan3690"
+           y="594.03503"
+           x="455.09149"
+           sodipodi:role="line">type: URLPrefix</tspan></text>
+    </g>
+    <g
+       id="g3718"
+       transform="translate(-63.535161,-69.644311)">
+      <rect
+         style="fill:#bdffff;fill-opacity:1;stroke:none"
+         id="rect3709"
+         width="311.56668"
+         height="84.306213"
+         x="729.43256"
+         y="711.47162" />
+      <text
+         sodipodi:linespacing="100%"
+         id="text3692"
+         y="739.14233"
+         x="739.11237"
+         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+         xml:space="preserve"><tspan
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+           y="739.14233"
+           x="739.11237"
+           id="tspan3694"
+           sodipodi:role="line">Q: Which password?</tspan><tspan
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+           id="tspan3696"
+           y="759.14233"
+           x="739.11237"
+           sodipodi:role="line">default: &quot;twitteraccount&quot;</tspan><tspan
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+           id="tspan3698"
+           y="779.14233"
+           x="739.11237"
+           sodipodi:role="line">type: PasswordManagerEntry</tspan></text>
+    </g>
+    <path
+       sodipodi:nodetypes="cc"
+       id="path3725"
+       d="m 665.89735,672.37304 -76.97529,4.88732"
+       style="fill:none;stroke:#007eff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)" />
+    <path
+       style="fill:none;stroke:#007eff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
+       d="m 244.366,781.11591 -45.20771,19.54928"
+       id="path3727"
+       sodipodi:nodetypes="cc" />
   </g>
 </svg>

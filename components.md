@@ -63,7 +63,7 @@ defensive consistency and protects its internal private state. Components are
 created with "endowments": authorities that they keep private. Components
 typically implement protocols and provide limited access to their private
 authorities: simultaneously providing more-useful and more-restricted
-functionality to their endowments. Some components are known as "Chrome
+functionality to their clients. Some components are known as "Chrome
 Components", and are given ambient access to the chrome; these are typically
 used to provide restricted access to specific primitive features. Non-chrome
 components have no authority other than their endowments: they can think all
@@ -133,10 +133,10 @@ ReadOnlyTwitterAPI, they will have no way to post new tweets or manipulate
 the account: they'll be limited to non-side-effect-causing methods.
 
 The top-level add-on code would be pretty simple: it would create the
-StatusBarIcon, start a polling loop (check for new tweets every minute), use
-it to ask the ReadOnlyTwitterAPI to get the count of unread tweets, and
-update the icon with the count. It would also attach an onClick handler to
-the icon that would get routed to the CreateNewTab function (for which the
+StatusBarIcon, start a polling loop (check for new tweets every minute),
+periodically ask the ReadOnlyTwitterAPI to get the count of unread tweets,
+and update the icon with the count. It would also attach an onClick handler
+to the icon that would get routed to the CreateNewTab function (for which the
 ReadOnlyTwitterAPI object should provide a getURL() method of some sort).
 
 Note how each object has a minimum of authority. A compromise (which could
@@ -223,12 +223,15 @@ Firefox to the next, because they represent the boundary between
 cross-version APIs and version-specific implementation details. Non-chrome
 components should not require changes when Firefox is upgraded.
 
-The "standard library" of functionality, initially described by JEPs, could
-be provided merely as a set of well-known and recommended APIs and
-components. They could easily be supplanted by better/more-popular interfaces
-and components later. This property, along with the "chrome component" flag,
-would incorporate both the "superpowers" and "capabilities" aspects of the
-existing Jetpack manifest files.
+The "standard library" of functionality, initially described by JEPs and
+bundled with the platform (or jetpack SDK), would be merely redefined as a
+set of well-known and recommended APIs and components (so well-known that
+they're bundled with the SDK). They could easily be supplanted by
+better/more-popular interfaces and components later. This property, along
+with the "chrome component" flag, would incorporate both the "superpowers"
+and "capabilities" aspects of the existing Jetpack manifest files. This could
+provide a clean and natural transition path from limited platform-provided
+JEPs to widespread community-written components.
 
 ## Proposal: Value Tradeoffs
 
@@ -269,8 +272,8 @@ authority and a username/password pair. If the component claims that it needs
 access to the user's entire password database, or to their full filesystem,
 the reviewer should get suspicious. By merely looking at the endowments (and
 assuming that the components selected to provide those endowments correctly
-implement the given API [recursive: see recursive]), the reviewer can
-establish an upper bound on the risk.
+implement the given API, and so on [recursive: see recursive]), the reviewer
+can establish an upper bound on the risk.
 
 The second issue is the code itself. If the code is simple enough to
 understand correctly, this can provide a tighter upper bound on the risk. The
@@ -385,59 +388,76 @@ chrome component objects, then the layer above that, etc, then finally the
 top-most add-on object. This "setup" code would form the bridge between the
 user (as the source of all authority) and the bits of confined code that will
 eventually make up the add-on stack. For the twitter example, that setup code
-might look vaguely like:
+might look vaguely like this (in python for clarity):
 
     def make_extension(chrome, host="twitter.com", password_slotname="twitter"):
-      x = XHR(chrome, restrict_to=host)
+      x = XHR(chrome)
+      x2 = XHRLimiter(restrict_to=host)
       pw = PasswordSlotAccess(chrome, password_slotname)
-      t1 = TwitterAPI(x, pw)
-      t2 = ReadOnlyTwitterAPI(t1)
+      t = TwitterAPI(x2, pw)
+      t2 = ReadOnlyTwitterAPI(t)
       s = StatusBarIconMaker(chrome)
       d = Driver(t2, s)
       d.run()
 
 Expressing the setup code as a program makes it pretty clear how the pieces
-need to be wired up. But this is too flexible, and must be given full chrome
-authority, and it isn't clear where it ought to live. If it lives in the
+need to be wired up. But actually writing it as javascript program feels
+wrong: it's *too* flexible, vulnerable to errors, and must be given full
+chrome authority. Imagine the author made a typo.. could you, as a reviewer,
+spot the excess authority in this version?:
+
+    def make_extension(chrome, host="twitter.com", password_slotname="twitter"):
+      x = XHR(chrome)
+      x2 = XHRLimiter(restrict_to=host)
+      pw = PasswordSlotAccess(chrome, password_slotname)
+      t = TwitterAPI(x2, pw)
+      t2 = ReadOnlyTwitterAPI(t)
+      s = StatusBarIconMaker(chrome)
+      d = Driver(t2, x)
+      d.run()
+
+(by giving the Driver "x" instead of "s", we accidentally give the driver
+access to the entire internet: it could reveal your private twitter messages,
+send spam, retrieve and execute an arbitrary payload from evil.com, and
+display annoying ads in your status bar)
+
+Also, it isn't clear where this setup code ought to live. If it lives in the
 top-level addon bundle, along with the Driver code, then it looks a lot like
 giving chrome access to the addon as a whole (which, while technically
-accurate, isn't what we're going for: the addon ought to only be getting
-ReadOnlyTwitterAPI and StatusBarIconMaker).
+accurate, isn't what we're going for: the top-level driver ought to only be
+getting ReadOnlyTwitterAPI and StatusBarIconMaker).
 
 So, instead of expressing this imaginary setup program in javascript, we
 could distribute it among the various package.json files that serve as
 headers for the different components. And we handle the parameterization by
 passing in a "PowerBox" request marker. When the loader assembles all the
 components together, it makes a list of all the markers and uses that to
-construct the install-time configuration dialog.
+construct the install-time configuration dialog. Each section in the
+following list would come from a different component's package.json file:
 
-    RestrictedXHR:
-     provides: XHR
-     depends_on: chrome
-     args: restrict_to=PowerBoxRequest(DOMAIN, "Allow XHR access to which site?")
-    
-    PasswordSlotAccess:
-     provides: PasswordSlotAccess
-     depends_on: chrome
-     args: slotname=PowerBoxRequest(PASSWORD, "Which password to use?")
-    
-    TwitterAPI:
-     provides: TwitterAPI
-     depends_on: RestrictedXHR, PasswordSlotAccess
-    
-    ReadOnlyTwitterAPI:
-     provides: ReadOnlyTwitterAPI
-     depends_on: TwitterAPI
-    
-    StatusBarIconMaker:
-     provides: StatusBarIconMaker
-     depends_on: chrome
-    
-    Driver:
-     depends_on: ReadOnlyTwitterAPI, StatusBarIconMaker
+* RestrictedXHR
+    * provides: XHR
+    * depends_on: chrome
+    * args: restrict_to=PowerBoxRequest(DOMAIN, "Allow XHR access to which site?")
+* PasswordSlotAccess
+    * provides: PasswordSlotAccess
+    * depends_on: chrome
+    * args: slotname=PowerBoxRequest(PASSWORD, "Which password to use?")
+* TwitterAPI
+    * provides: TwitterAPI
+    * depends_on: RestrictedXHR, PasswordSlotAccess
+* ReadOnlyTwitterAPI
+    * provides: ReadOnlyTwitterAPI
+    * depends_on: TwitterAPI
+* StatusBarIconMaker
+    * provides: StatusBarIconMaker
+    * depends_on: chrome
+* Driver
+    * depends_on: ReadOnlyTwitterAPI, StatusBarIconMaker
 
 The loader would spot the two PowerBoxRequest markers and ask the user for a
-DOMAIN and PASSWORD(name) when installing, using the 
+DOMAIN and PASSWORD(name) when installing, using the provided text when
+phrasing the questions.
 
 Note that none of the higher components are aware of the lower components'
 authority requirements: they don't even see the PowerBoxRequest markers. This
@@ -446,24 +466,23 @@ allows the top-level Driver to clearly depend only upon the appropriate APIs
 constructed with sufficient authorities to do their job).
 
 OTOH, we'd really like the install-time dialog to at least explain what these
-DOMAIN/PASSWORD are used for, and probably suggest a default. The situation
-is complicated by the fact that the lower-level components doing the
-restricting are not generally aware of what their restrictions are being used
-for. The RestrictedXHR object doesn't know that it's being used by a
+"DOMAIN"/"PASSWORD" are used for, and probably suggest a default. The
+situation is complicated by the fact that the lower-level components doing
+the restricting are not generally aware of what their restrictions are being
+used for. The RestrictedXHR object doesn't know that it's being used by a
 TwitterAPI, so it can't offer a meaningful question to the user.. only the
 TwitterAPI object (or something higher up) can provide that. So maybe
 something vaguely like:
 
-    TwitterAPI:
-     provides: TwitterAPI
-     depends_on: RestrictedXHR(desc="Which twitter-like site shall I access?",
-                               default="twitter.com"), PasswordSlotAccess
-    
-    RestrictedXHR(desc,default):
-     desc = "Allow XHR access to which site?" + desc
-     provides: XHR
-     depends_on: chrome
-     args: restrict_to=PowerBoxRequest(DOMAIN, desc, default)
+* TwitterAPI
+    * provides: TwitterAPI
+    * depends_on: RestrictedXHR(desc="Which twitter-like site shall I access?",
+                                default="twitter.com"), PasswordSlotAccess
+* RestrictedXHR(desc,default)
+    * desc = "Allow XHR access to which site?" + desc
+    * provides: XHR
+    * depends_on: chrome
+    * args: restrict_to=PowerBoxRequest(DOMAIN, desc, default)
 
 ### Bundling 2
 
@@ -498,12 +517,24 @@ assembly-program, and parameterized with the following user-provided values
 (which were asked using the following questions and defaults), does correctly
 and safely provide the claimed functionality.
 
+In the following picture, the light blue rectangles are the "question nodes",
+which the loader will translate into authority-granting questions for the
+user to answer at install time. The loader can ask the right sort of question
+based upon the expected type. For example, when it wants a
+PasswordManagerEntry, the loader can check to see if there's already a
+password stored by this name, or if it needs to add a new entry, or provide a
+menu of choices. But when it wants a URLPrefix, it knows to get a string, and
+make sure it starts with http or https and ends with a slash.
+
+![assembly program](assembly.png "Assembly Program)
+
 How is this assembly language ("blueprint"? "bill-of-materials"?) safer than
 writing a JS program and giving it full chrome access? First answer is
 typechecking: by only wiring up objects with compatible APIs, we can't
 accidentally give chrome access to anything but the low-level components that
-declared a need for it. Second is limited domain: no loops, no conditionals.
-This program will mostly be written by a computer: some tool will look at the
+declared a need for it. Second, it is written in a limited
+(non-Turing-complete) language, with no loops and no conditionals. This
+program will mostly be written by a computer: some tool will look at the
 components available and the APIs they implement, and will refuse to help
 build an assembly-program that connects them in non-typesafe ways (e.g.
 granting full chrome access to the TwitterAPI constructor, or granting a
@@ -532,3 +563,7 @@ So, somehow, we have to make the jump from the user's installation process
 (and the decisions they make) to having a graph of live objects that
 implement the desired functionality. The end state seems clear to me, but the
 path to get there is still pretty fuzzy.
+
+
+ -Brian Warner 18-Mar-2010
+ 
