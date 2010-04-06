@@ -20,53 +20,48 @@ fixed prefix and the client-supplied suffix. This prevents the client from
 accessing any URL outside the preconfigured prefix, and is not vulnerable to
 mistakes in string comparison or regular expression matching.
 
-A full-powered XHR object would typically be used like this:
+For simplicty, we will use the `jQuery.get()` method as the full-powered XHR
+component. This method has a simpler API than the native `XHRHttpRequest`
+object. We define a full-powered XHR object in terms of `jQuery` as follows:
 
-      function done(aEvt) {
-          if (req.readyState == 4) {
-              if (req.status == 200)
-                  dump(req.responseText);
-              else
-                  dump("Error");
+      var FullGet = {
+          get: function get(url, callback) {
+              return jQuery.get(url, callback);
           }
       }
-      var req = new XMLHttpRequest();
-      req.open("GET", "http://api.twitter.com/1/statuses/friends_timeline.xml",
-               true, username, password);
-      req.onreadystatechange = done;
-      req.send(null)
 
-The LimitedXHR implementation might look like this:
+A full-powered GET-like object would typically be used like this:
 
-      function LimitedXHR(xhr, prefix) {
+      var full_get = require("GET").FullGet
+      function done(data, textStatus, request) {
+          dump(data);
+      }
+      full_get.get("http://api.twitter.com/1/statuses/friends_timeline.xml", done);
+
+The LimitedGET implementation might look like this:
+
+      function makeLimitedGET(full_get, prefix) {
         return {
-          xhr: xhr,
+          full_get: full_get,
           prefix: prefix,
-          call: function(url_suffix, options) {
-                  return this.xhr.call(this.prefix + url_suffix, options);
-                }
+          get: function(url_suffix, cb) {
+            function remove_request(data, textStatus, request) {
+              cb(data, textStatus);
+            }
+            this.full_get.get(this.prefix + url_suffix, remove_request);
+          }
         }
       }
 
 This object would typically be constructed during assembly/linkage time:
 
-      var full_xhr = require("XHR").XMLHttpRequest
-      var limited_xhr = require("LimitedXHR").LimitedXHR(full_xhr, "http://twitter.com/")
+      var full_get = require("GET").FullGet
+      var limited_get = require("LimitedGET").LimitedGET(full_get, "http://twitter.com/")
 
-And a well-behaved client (which receives only the `limited_xhr` object)
+And a well-behaved client (which receives only the `limited_get` object)
 would normally use it like this:
 
-      var req = new limited_xhr();
-      req.open("GET", "1/statuses/friends_timeline.xml", true, username, password);
-      req.onreadystatechange = done;
-      req.send(null)
-
-Note that, for the purposes of this document, we're restricting our goals to
-having a `limited_xhr` object (the product of `new limited_xhr()`) that is
-only used by a single client. Mutually distrusting clients will share access
-to the parent `limited_xhr` factory, but we do not try to solve the problem
-of changing the XHR API to allow sensible cooperation on the per-request
-objects it creates.
+      limited_get("1/statuses/friends_timeline.xml", done);
 
 ## Attacks
 
@@ -88,10 +83,8 @@ Caja does, because:
 A simple attack, against a naïve implementation, would be to extract the
 supposedly-private full-powered XHR object from inside the limiter:
 
-      var req = new limited_xhr();
-      full_xhr = req.xhr;
-      full_xhr.open("POST", "http://www.bank.com/withdrawal, true);
-      req.send(null)
+      var full_get = limited_get.full_get;
+      full_get.open("http://www.bank.com/secret_balance", done);
 
 The Jetpack Components framework must prevent these sorts of attacks in all
 circumstances, without requiring deep (human) inspection of all potential
@@ -121,38 +114,42 @@ exactly to inside/outside) removes a lot of the usual confusion. In the
 closure approach, method code does not use the `this` keyword to access
 private state.
 
-      function LimitedXHR(xhr, prefix) {
+      function makeLimitedGET(full_get, prefix) {
         return {
-          call: function(url_suffix, options) {
-                  return xhr.call(prefix + url_suffix, options);
-                }
+          get: function(url_suffix, cb) {
+            function remove_request(data, textStatus, request) {
+              cb(data, textStatus);
+            }
+            full_get.get(prefix + url_suffix, remove_request);
+          }
         }.freeze();
       }
 
 Another example uses private mutable state to maintain an increment-only
-counter:
+counter, which a caller cannot modify or read directly:
 
-      function Counter() {
+      function makeCounter() {
         var count := 0;
         return {
           increment: function() {
                   count += 1;
                 }
           read: function() {
-                  return count;
+                  return "The counter value is " + count;
                 }
         }.freeze();
       }
 
-In this approach, any properties defined with literal names (like `call:`)
-are publically-visible and immutable. Every behavior-providing object in the
-Jetpack component must store its private state in lexically-accessible
-variables: if a programmer accidentally stores the state as a property, that
-state will be visible to the world. Likewise, all such objects must be frozen
-before being allowed to escape the lexical scope: if a programmer forgets the
-`freeze()`, their objects will be vulnerable to corruption by clients (their
-private state will remain private, however their methods can be replaced, so
-other security-affecting assumptions can be violated).
+In this approach, any properties defined with literal names (like `get:` or
+`increment:`) are publically-visible and immutable. Every behavior-providing
+object in the Jetpack component must store its private state in
+lexically-accessible variables: if a programmer accidentally stores the state
+as a property, that state will be visible to the world. Likewise, all such
+objects must be frozen before being allowed to escape the lexical scope: if a
+programmer forgets the `freeze()`, their objects will be vulnerable to
+corruption by clients (their private state will remain private, however their
+methods can be replaced, so other security-affecting assumptions can be
+violated).
 
 ### Enumerated Properties
 
@@ -178,26 +175,79 @@ other. However, Jetpack code should have the ability to create these domains
 internally, so they can utilize POLA on their internals (and not just their
 externals).
 
-      function LimitedXHR(xhr, prefix) {
+The wrapper-style code might look something vaguely like this:
+
+      function makeLimitedGET(full_get, prefix) {
         return {
-          __exposedProps__ = {call: "r"},
-          call: function(url_suffix, options) {
-                  return xhr.call(prefix + url_suffix, options);
-                }
+          __exposedProps__ = {get: "r"};
+          full_get: full_get,
+          prefix: prefix,
+          get: function(url_suffix, cb) {
+            function remove_request(data, textStatus, request) {
+              cb(data, textStatus);
+            }
+            this.full_get.get(this.prefix + url_suffix, remove_request);
+          }
         }
       }
 
+In the long run, the drawback with wrappers is the performance hit they incur
+on each method call. In addition, wrappers frequently cause GC problems,
+especially when reference cycles traverse the wrappers. This is usually worse
+when the wrappers are not implemented in the same language (e.g. when C++
+objects are used to support the wrapping of JS objects), because the
+reference counts are hidden.
 
 
 ## Client Requirements
 
 Client code, which is given a reference to a component, must not be able to
-read or modify that component's private state. Many of the attack vectors
-listed above must be blocked by modifying or limiting client code. In some
-cases this is performed by static analysis, such as XYZ. In others, it is
-performed with runtime checks, such as the ES5-S prohibition on accessing
-`arguments.caller`, or restrictions that prevent object property modification
-or deletion.
+read or modify that component's private state. Many of the
+[attack vectors](http://code.google.com/p/google-caja/wiki/AttackVectors)
+must be blocked by modifying or limiting client code. In some cases this is
+performed by static analysis, such as prohibiting `with` or raw `eval` from
+appearing in the code. In others, it is performed with runtime checks, such
+as the ES5-S prohibition on accessing `arguments.caller`, or restrictions
+that prevent object property modification or deletion.
+
+ES5 prohibits most of the attacks that could be used to violate the privacy
+of lexically-scoped variables, enabling that technique as an
+information-hiding mechanism. If all potential adversary code (i.e. every
+piece of code that could ever obtain a reference to our LimitedGET object) is
+restricted from using lexical-scope-violating constructs, then
+lexical-scoping can be safe. If there is any adversary code that is not
+restricted in this way, then lexical-scoping is not safe.
+
+Wrappers have similar issues. The wrapper technology will make some sort of
+internal-vs-external distinction, and correct behavior will depend upon some
+assumptions about the caller's behavior. If those assumptions can be relied
+upon everywhere, then the wrapped code will remain secure. If those
+assumptions might not hold everywhere, then the wrapper will not be
+sufficient.
+
+## Domains
+
+The collection of components that make up a single add-on (in fact the
+collection that makes up the whole browser environment) can be envisioned as
+a set of mistrusting domains with objects inside them, like little medieval
+fiefdoms filled with people. It may be easier to implement any given
+component in a fashion that trusts all of its internal objects (i.e. the
+author is willing to have those objects be fully vulnerable to each other),
+and only provide defensive consistency against adversarial code from other
+components. Or it may be easy enough to let each object be an island, a
+domain unto itself.
+
+I imagine each component to include a tag in its manifest (the package.json
+file or equivalent), describing what sort of language the component is
+written in, with values like "ES5-Strict" or "ADsafe", etc. This tag would
+inform the loader what sorts of restrictions to apply to the component's
+code. Certain tags would induce wrappers or other barriers to be put in place
+around the component, either to protect it against external intrusion (such
+as a tag that means "leading underscores on property names mean private"), or
+to protect the rest of the world against the insufficiently-constrained
+component (such as a tag which says "we allow full ES3 badness here").
+
+
 
 
 ## Tools
