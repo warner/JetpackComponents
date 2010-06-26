@@ -1,5 +1,5 @@
 
-all: components.html confinement.html index.html
+all: components.html confinement.html analysis-tool.html index.html 
 
 %.html: %.md
 	markdown -f $@ $<
