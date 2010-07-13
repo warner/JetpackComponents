@@ -151,6 +151,36 @@ signature for the top-level module, described below):
 - sig4: ( H(PWmgr.md), H(PWmgr.js), {}, true )
 - sig5: ( H(XHR.md), H(XHR.js), {}, true )
 
+### Bundled Data
+
+The `data/` directory contains arbitrary data (not code) which can be
+accessed with the `require("self").data.load(FILENAME)` and
+`require("self").data.url(FILENAME)` calls. This is specified to provide data
+from the same package as the code invoking `require("self")`, to allow
+packages to hide data from other packages. This data is *only* available
+through the `self` module, although the `data.url()` form returns a
+capability URL which can subsequently be passed to arbitrary other users.
+
+To capture the behavior-influencing aspects of this data, any module which
+uses the `self` module will include a hash of all bundled data in its
+manifest signature. Each data-bearing package will generate a JSON file
+containing a mapping from `FILENAME` (including slashes: this is the argument
+to `data.load()` or `data.url()`) to a XPI-relative filename and the hash of
+the file's contents. This JSON file will be stored in the XPI, and its hash
+will be included in the `self`-using module's manifest entry.
+
+Modules which do not use `self` will not have a data-hash included in their
+manifest line. As a result, they do not need to be re-reviewed when the
+bundled data changes.
+
+We still need to think through the implications of this, especially if
+`data/` is used to hold page-mod scripts (which affect add-on behavior even
+more drastically than plain old HTML/image data). It is useful to avoid a
+re-review of code when data has changed, but since bundled data will affect
+program behavior (if the code makes decisions on the basis of e.g. a static
+JSON table), or user behavior (if the data contains UI elements that a human
+will use to decide which button to push), it needs to be reviewed
+*somewhere*.
 
 ## Add-on Signatures
 
