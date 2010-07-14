@@ -3,13 +3,13 @@
 
 ## Executive Summary
 
-  We build an analysis tool, as a web service. Developers upload XPIs to this
-  service. They are unpacked and dissected. Each module inside the XPI gets a
-  review page which shows the code, has tools to discuss each line (add/show
-  comments), and provides buttons to "sign-off" on the module. When reviewers
-  have approved all modules in an XPI, that XPI plus the approval signatures
-  can be downloaded and installed in a browser. Browsers will reject XPIs
-  that contain modules not approved by a configurable signing key.
+> We build an analysis tool, as a web service. Developers upload XPIs to this
+> service. They are unpacked and dissected. Each module inside the XPI gets a
+> review page which shows the code, has tools to discuss each line (add/show
+> comments), and provides buttons to "sign-off" on the module. When reviewers
+> have approved all modules in an XPI, that XPI plus the approval signatures
+> can be downloaded and installed in a browser. Browsers will reject XPIs
+> that contain modules not approved by a configurable signing key.
 
 ## Background
 
@@ -153,8 +153,8 @@ signature for the top-level module, described below):
 
 ### Bundled Data
 
-The `data/` directory contains arbitrary data (not code) which can be
-accessed with the `require("self").data.load(FILENAME)` and
+The `data/` directory contains arbitrary data (not generally code) which can
+be accessed with the `require("self").data.load(FILENAME)` and
 `require("self").data.url(FILENAME)` calls. This is specified to provide data
 from the same package as the code invoking `require("self")`, to allow
 packages to hide data from other packages. This data is *only* available
@@ -408,6 +408,23 @@ library (the "importee") must be considered to be part of the importer's
 code: every line of the library could affect the behavior of the importer.
 This increases the review burden: when jQuery.js is changed, every add-on
 which uses it must be re-reviewed.
+
+## XPI Files
+
+This is a list of all the files created by the manifest generator and added
+to the XPI, along with their formats:
+
+* `install.rdf` : tells the Firefox Add-On Manager about the add-on. Contains
+  the ID, version-compatibility information, and a flag that tells the
+  application to use "bootstrap.js".
+* `bootstrap.js` : basic bootstrap file
+* `loader.js` : jetpack-specific loader, responsible for checking signatures
+  against the manifest
+* `manifest.json`
+* `manifest.sig.json`
+* `package-0-data.json`: array of ( FILENAME, H(data) )
+* `package-0-data-FILENAME` ..
+* `package-0-lib-FILENAME` ..
 
 --
 
