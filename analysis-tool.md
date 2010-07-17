@@ -419,12 +419,19 @@ to the XPI, along with their formats:
   application to use "bootstrap.js".
 * `bootstrap.js` : basic bootstrap file
 * `loader.js` : jetpack-specific loader, responsible for checking signatures
-  against the manifest
-* `manifest.json`
-* `manifest.sig.json`
-* `package-0-data.json`: array of ( FILENAME, H(data) )
-* `package-0-data-FILENAME` ..
-* `package-0-lib-FILENAME` ..
+  against the manifest and loading/evaluating all JS files
+* `manifest.json`: array of:
+ * XPI filename of module's JS: $PACKAGE-lib-$FILENAME.js
+ * SHA256 hash of module's JS (as a hex string)
+ * XPI filename of module's docs: $PACKAGE-docs-$FILENAME.md
+ * dictionary with keys that are arguments to `require()`, and values that are integer indexes into the `manifest.json` array
+ * boolean: true if the module uses chrome authority
+ * `$PACKAGE-data.json`, or null if the package does not use bundled data
+ * SHA256 hash of `$PACKAGE-data.json` (as a hex string), or null if the package does not use bundled data
+* `manifest.sig.json`: array of (jetpack_id, base32 verifying key, base32 signature)
+* `$PACKAGE-data.json`: ...
+* `$PACKAGE-data-FILENAME`: bundled data
+
 
 --
 
