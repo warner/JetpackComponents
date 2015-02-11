@@ -2,7 +2,7 @@
 # Confinement in Jetpack Components
 
 ## Summary
-- Jetpack components ([defined here](components.html)) must be able to
+- Jetpack components ([defined here](components.md)) must be able to
   maintain defensive consistency, so they must be able to retain private and
   uncorrupted internal state despite the behavior of adversarial clients.
 - We have multiple options to achieve this confinement. All require some

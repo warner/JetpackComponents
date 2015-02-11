@@ -61,16 +61,16 @@ signatures that cover certain portions of the manifest. In this fashion,
 reviewers express their opinions about module code, and the add-on loader
 enforces those opinions.
 
-My original ["Jetpack Components"][1] design called for an "interface" that
-sits between each implementation component, and reviews which state that a
-given JS file would correctly provide the interface. The interface provided a
-buffer or abstraction boundary between modules, making it possible to isolate
-changes: when a top-level module depends upon some lower-level API module,
-and the low-level module is upgraded, as long as the new version is reviewed
-and found to still provide the same interface as before, then the top-level
-module does not need to be re-reviewed. In the absence of boundaries like
-this, any change to any low-level module would require a complete re-review
-of all the modules that use it.
+My original (["Jetpack Components"](components.md)) design called for an
+"interface" that sits between each implementation component, and reviews
+which state that a given JS file would correctly provide the interface. The
+interface provided a buffer or abstraction boundary between modules, making
+it possible to isolate changes: when a top-level module depends upon some
+lower-level API module, and the low-level module is upgraded, as long as the
+new version is reviewed and found to still provide the same interface as
+before, then the top-level module does not need to be re-reviewed. In the
+absence of boundaries like this, any change to any low-level module would
+require a complete re-review of all the modules that use it.
 
 In this new approach, these interfaces are represented by the existing
 Markdown documentation files for each module, rather than being defined by
@@ -431,10 +431,3 @@ to the XPI, along with their formats:
 * `manifest.sig.json`: array of (jetpack_id, base32 verifying key, base32 signature)
 * `$PACKAGE-data.json`: ...
 * `$PACKAGE-data-FILENAME`: bundled data
-
-
---
-
-Footnotes:
-
-[1]: http://people.mozilla.org/~bwarner/jetpack/components/
