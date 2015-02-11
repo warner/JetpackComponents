@@ -43,7 +43,7 @@ This add-on would consist of a stack of components:
   statusbar, updates its content, and delivers click events upwards
 - CreateNewTab: provides an API that accepts a URL and opens a new tab
 
-![component stack](stack.png "Component Stack")
+![component stack](stack.svg "Component Stack")
 
 ## Definitions
 
@@ -526,7 +526,7 @@ password stored by this name, or if it needs to add a new entry, or provide a
 menu of choices. But when it wants a URLPrefix, it knows to get a string, and
 make sure it starts with http or https and ends with a slash.
 
-![assembly program](assembly.png "Assembly Program)
+![assembly program](assembly.svg "Assembly Program)
 
 How is this assembly language ("blueprint"? "bill-of-materials"?) safer than
 writing a JS program and giving it full chrome access? First answer is

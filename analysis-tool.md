@@ -78,7 +78,7 @@ some external entity.
 
 ## Example
 
-![sample module graph](reviewsigs.png "Sample Module Graph")
+![sample module graph](reviewsigs.svg "Sample Module Graph")
 
 This example represents a twitter status-checking add-on, which updates a
 status-bar icon with the number of unread messages. The add-on -specific code
